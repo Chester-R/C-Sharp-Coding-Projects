@@ -46,89 +46,16 @@ namespace CarInsurance.Controllers
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "Id,FirstName,LastName,EmailAddress,DateOfBirth,CarYear,CarMake,CarModel,DUI,SpeedingTickets,CoverageType,Quote")] Insuree insuree, string create, string calculator)
+        public ActionResult Create([Bind(Include = "Id,FirstName,LastName,EmailAddress,DateOfBirth,CarYear,CarMake,CarModel,DUI,SpeedingTickets,CoverageType")] Insuree insuree)
         {
-            if (create == "Create")
+
+
+            if (ModelState.IsValid)
             {
-                if (ModelState.IsValid)
-                {
-                    db.Insurees.Add(insuree);
-                    db.SaveChanges();
-                    return RedirectToAction("Index");
-                }
-            }
-            else if (calculator == "Calculate")
-            {
-                Insuree calculate = new Insuree();
-                calculate.DateOfBirth = insuree.DateOfBirth;
-
-                int age = DateTime.Now.Year - calculate.DateOfBirth.Year;
-                decimal agequote;
-                if (age <= 18)
-                {
-                    agequote = 100;
-                }
-                else if (age > 18 && age < 26)
-                {
-                    agequote = 50;
-                }
-                else
-                {
-                    agequote = 25;
-                }
-
-                calculate.CarYear = insuree.CarYear;
-                int carYear = calculate.CarYear;
-                decimal yearquote;
-                if (carYear < 2000 || carYear > 2015)
-                {
-                    yearquote = 25;
-                }
-                else yearquote = 0;
-
-                calculate.CarMake = insuree.CarMake;
-                string carMake = calculate.CarMake.ToLower();
-                calculate.CarModel = insuree.CarModel;
-                string carModel = insuree.CarModel.ToLower();
-                decimal makequote;
-                if (carMake == "porsche")
-                {
-                    makequote = 25;
-                }
-                else if (carMake == "porsche" && carModel == "911 Carrera")
-                {
-                    makequote = 50;
-                }
-                else makequote = 0;
-
-                calculate.SpeedingTickets = insuree.SpeedingTickets;
-                int speedingTicket = calculate.SpeedingTickets;
-                decimal ticketquote = speedingTicket * 10;
-
-                decimal initialquote = agequote + yearquote + makequote + ticketquote + 50;
-
-                calculate.DUI = insuree.DUI;
-                bool dui = calculate.DUI;
-                calculate.CoverageType = insuree.CoverageType;
-                bool coverage = calculate.CoverageType;
-                decimal specialquote;
-                if (dui == true && coverage == true)
-                {
-                    specialquote = initialquote * 1.75m;
-                }
-                else if (dui == true && coverage == false)
-                {
-                    specialquote = initialquote * 1.25m;
-                }
-                else if (dui == false && coverage == true)
-                {
-                    specialquote = initialquote * 1.5m;
-                }
-                else specialquote = initialquote;
-
-                insuree.Quote = specialquote;
-
-                return View(insuree);
+                Calculator(insuree, "Create");
+                db.Insurees.Add(insuree);
+                db.SaveChanges();
+                return RedirectToAction("Index");
             }
 
             return View(insuree);
@@ -154,10 +81,11 @@ namespace CarInsurance.Controllers
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit([Bind(Include = "Id,FirstName,LastName,EmailAddress,DateOfBirth,CarYear,CarMake,CarModel,DUI,SpeedingTickets,CoverageType,Quote")] Insuree insuree)
+        public ActionResult Edit([Bind(Include = "Id,FirstName,LastName,EmailAddress,DateOfBirth,CarYear,CarMake,CarModel,DUI,SpeedingTickets,CoverageType")] Insuree insuree)
         {
             if (ModelState.IsValid)
             {
+                Calculator(insuree, "Save");
                 db.Entry(insuree).State = EntityState.Modified;
                 db.SaveChanges();
                 return RedirectToAction("Index");
@@ -200,87 +128,94 @@ namespace CarInsurance.Controllers
             base.Dispose(disposing);
         }
 
-        //public ActionResult Calculate()
-        //{
-        //    return View(new Insuree());
-        //}
-        //[HttpPost]
-        //public ActionResult Calculate([Bind(Include = "Id,FirstName,LastName,EmailAddress,DateOfBirth,CarYear,CarMake,CarModel,DUI,SpeedingTickets,CoverageType")] Insuree insuree)
-        //{
+        public ActionResult Calculator()
+        {
+            return View();
+        }
 
-        //    Insuree calculate = new Insuree();
-        //    calculate.DateOfBirth = insuree.DateOfBirth;
-            
-        //    int age = DateTime.Now.Year - calculate.DateOfBirth.Year;
-        //    decimal agequote;
-        //    if (age <= 18)
-        //    {
-        //        agequote = 100;
-        //    }
-        //    else if (age > 18 && age < 26)
-        //    {
-        //        agequote = 50;
-        //    }
-        //    else
-        //    {
-        //        agequote = 25;
-        //    }
+        [HttpPost]
+        public ActionResult Calculator(Insuree insuree, string calculator)
+        {
+            Insuree calculate = new Insuree();
 
-        //    calculate.CarYear = insuree.CarYear;
-        //    int carYear = calculate.CarYear;
-        //    decimal yearquote;
-        //    if (carYear < 2000 || carYear > 2015)
-        //    {
-        //        yearquote = 25;
-        //    }
-        //    else yearquote = 0;
+            calculate.DateOfBirth = insuree.DateOfBirth;
+            int age = DateTime.Now.Year - calculate.DateOfBirth.Year;
+            decimal agequote;
+            if (age <= 18)
+            {
+                agequote = 100;
+            }
+            else if (age > 18 && age < 26)
+            {
+                agequote = 50;
+            }
+            else
+            {
+                agequote = 25;
+            }
 
-        //    calculate.CarMake = insuree.CarMake;
-        //    string carMake = calculate.CarMake.ToLower();
-        //    calculate.CarModel = insuree.CarModel;
-        //    string carModel = insuree.CarModel.ToLower();
-        //    decimal makequote;
-        //    if (carMake == "porsche")
-        //    {
-        //        makequote = 25;
-        //    }
-        //    else if (carMake == "porsche" && carModel == "911 Carrera")
-        //    {
-        //        makequote = 50;
-        //    }
-        //    else makequote = 0;
+            calculate.CarYear = insuree.CarYear;
+            int carYear = calculate.CarYear;
+            decimal yearquote;
+            if (carYear < 2000 || carYear > 2015)
+            {
+                yearquote = 25;
+            }
+            else yearquote = 0;
 
-        //    calculate.SpeedingTickets = insuree.SpeedingTickets;
-        //    int speedingTicket = calculate.SpeedingTickets;
-        //    decimal ticketquote = speedingTicket * 10;
+            calculate.CarMake = insuree.CarMake;
+            string carMake = calculate.CarMake.ToLower();
+            decimal makequote;
+            if (carMake == "porsche")
+            {
+                makequote = 25;
+            }
+            else makequote = 0;
 
-        //    decimal initialquote = agequote + yearquote + makequote + ticketquote + 50;
+            calculate.CarModel = insuree.CarModel;
+            string carModel = insuree.CarModel.ToLower();
+            decimal modelquote;
+            if (carModel == "911carrera" || carModel == "911 Carrera" || carModel == "911 carrera" || carModel == "911Carrera")
+            {
+                modelquote = 25;
+            }
+            else modelquote = 0;
+          
+            calculate.SpeedingTickets = insuree.SpeedingTickets;
+            int speedingTicket = calculate.SpeedingTickets;
+            decimal ticketquote = speedingTicket * 10;
 
-        //    calculate.DUI = insuree.DUI;
-        //    bool dui = calculate.DUI;
-        //    calculate.CoverageType = insuree.CoverageType;
-        //    bool coverage = calculate.CoverageType;
-        //    decimal specialquote;
-        //    if (dui == true && coverage == true)
-        //    {
-        //        specialquote = initialquote * 1.75m;
-        //    }
-        //    else if (dui == true && coverage == false)
-        //    {
-        //        specialquote = initialquote * 1.25m;
-        //    }
-        //    else if (dui == false && coverage == true)
-        //    {
-        //        specialquote = initialquote * 1.5m;
-        //    }
-        //    else specialquote = initialquote;
+            decimal initialquote = agequote + yearquote + makequote + modelquote + ticketquote + 50;
 
-        //    calculate.Quote = specialquote;
+            calculate.DUI = insuree.DUI;
+            bool dui = calculate.DUI;
+            calculate.CoverageType = insuree.CoverageType;
+            bool coverage = calculate.CoverageType;
+            decimal specialquote;
+            if (dui == true && coverage == true)
+            {
+                specialquote = initialquote * 1.75m;
+            }
+            else if (dui == true && coverage == false)
+            {
+                specialquote = initialquote * 1.25m;
+            }
+            else if (dui == false && coverage == true)
+            {
+                specialquote = initialquote * 1.5m;
+            }
+            else specialquote = initialquote;
 
-        //    return View(insuree);
-        //}
+            insuree.Quote = specialquote;
 
-        
+            if (calculator == "Calculate")
+            {
+                return View(insuree);
+            }
+            else return View(insuree.Quote);
+        }
+
+
 
     }
 }
